@@ -2,31 +2,28 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>ググれ！</title>
+  <title>調べ方講座ｗ</title>
   <style>
     body {
       margin: 0;
-      overflow: hidden;
+      height: 100vh;
       background: black;
       color: #0f0;
       font-family: monospace;
-      text-align: center;
+      overflow: hidden;
     }
-    h1 {
-      font-size: 3em;
-      margin-top: 80px;
+
+    /* 入力欄を中央寄せ */
+    .center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       position: relative;
-      z-index: 1;
-      animation: blink 1s infinite;
+      z-index: 2;
+      margin-top: 20vh;
     }
-    @keyframes blink {
-      50% { color: red; }
-    }
-    form {
-      position: relative;
-      z-index: 1;
-    }
-    input[type="text"] {
+
+    input {
       padding: 10px;
       width: 250px;
       font-size: 1em;
@@ -35,62 +32,77 @@
       background: #111;
       color: #0f0;
     }
-    button {
-      padding: 10px 20px;
-      font-size: 1em;
-      margin-left: 10px;
-      background: red;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+
+    /* Enterキー */
+    .key {
+      display: inline-block;
+      margin: 20px auto;
+      padding: 20px 60px;
+      border: 2px solid #0f0;
+      border-radius: 6px;
+      background: #111;
+      color: #0f0;
+      font-size: 2em;
+      font-weight: bold;
+      box-shadow: 0 6px #060;
+      opacity: 0;
+      transform: translateY(-150px);
     }
-    button:hover {
-      background: darkred;
+
+    /* 落下＆バウンド */
+    .key.drop {
+      animation: dropBounce 0.8s ease-out forwards;
     }
+    @keyframes dropBounce {
+      0% {
+        opacity: 0;
+        transform: translateY(-150px);
+      }
+      60% {
+        opacity: 1;
+        transform: translateY(40px);
+      }
+      80% {
+        transform: translateY(-10px);
+      }
+      100% {
+        transform: translateY(0); /* ← 最後に安定 */
+      }
+    }
+
+    /* 押された時に光る演出 */
+    .key.pressed {
+      background: #0f0;
+      color: black;
+      box-shadow: 0 0 20px #0f0, 0 0 40px #0f0;
+      transform: translateY(6px) scale(0.98);
+      transition: all 0.2s ease;
+      text-shadow: 0 0 15px yellow, 0 0 30px yellow;
+    }
+
+    /* 背景の文字雨 */
     canvas {
-      position: fixed;
+      position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-    }
-    pre {
-      text-align: left;
-      margin: 50px auto;
-      width: fit-content;
-      font-size: 1.5em;
-      white-space: pre-wrap;
-      position: relative;
-      z-index: 2;
-      color: lime;
-    }
-    .highlight {
-      border: 2px solid yellow;
-      box-shadow: 0 0 10px yellow;
+      z-index: 1;
     }
   </style>
 </head>
 <body>
   <canvas id="matrix"></canvas>
-  <h1>ググれ！</h1>
-  <form id="searchForm">
-    <input type="text" id="query" placeholder="ここに入力">
-    <button type="submit">ググれ！</button>
-  </form>
 
   <script>
-    // ===== 背景（煽りワード雨） =====
+    // 背景の緑の雨
     const canvas = document.getElementById("matrix");
     const ctx = canvas.getContext("2d");
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
 
-    const insults = ["バーカ", "アホ", "マヌケ", "雑魚", "情弱", "カス", "草", "しらべろｗ"];
-    const fontSize = 20;
-    const columns = Math.floor(canvas.width / fontSize);
-    const drops = Array(columns).fill(1);
+    const letters = "情弱ｗググれｗ草ｗ検索力０ｗ".split("");
+    const fontSize = 18;
+    const columns = canvas.width / fontSize;
+    const drops = Array.from({ length: columns }).map(() => 1);
 
     function draw() {
       ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
@@ -99,89 +111,26 @@
       ctx.font = fontSize + "px monospace";
 
       for (let i = 0; i < drops.length; i++) {
-        const text = insults[Math.floor(Math.random() * insults.length)];
+        const text = letters[Math.floor(Math.random() * letters.length)];
         ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
         if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
           drops[i] = 0;
         }
         drops[i]++;
       }
     }
-    setInterval(draw, 80);
+    setInterval(draw, 50);
 
-    // ===== ステップ演出付き検索 =====
-    document.getElementById("searchForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const q = document.getElementById("query").value.trim();
-      if (q) {
-        showSteps(q);
-      }
-    });
-
-    const params = new URLSearchParams(window.location.search);
-    const q = params.get("q");
-    if (q) {
-      showSteps(q);
-    }
-
-    function showSteps(query) {
-      document.body.innerHTML = "<canvas id='matrix'></canvas><pre id='steps'></pre>";
-      const pre = document.getElementById("steps");
-
-      // 背景を復活
-      const canvas = document.getElementById("matrix");
-      const ctx = canvas.getContext("2d");
-      canvas.height = window.innerHeight;
-      canvas.width = window.innerWidth;
-      setInterval(draw, 80);
-
-      const steps = [
-        { text: "① 調べたい言葉を入力する（できる？ｗ）", action: "type" },
-        { text: "② Enterを押す（それぐらい分かるよね？ｗ）", action: "enter" },
-        { text: "…ほら、情弱でもできるぞｗ", action: "redirect" }
-      ];
-
-      let i = 0;
-
-      function nextStep() {
-        if (i >= steps.length) return;
-        const step = steps[i];
-        pre.textContent += step.text + "\n\n";
-
-        if (step.action === "type") {
-          fakeTyping(query, () => {
-            i++;
-            setTimeout(nextStep, 1500);
-          });
-        } else if (step.action === "enter") {
-          fakeEnter(() => {
-            i++;
-            setTimeout(nextStep, 1500);
-          });
-        } else if (step.action === "redirect") {
-          setTimeout(() => {
-            window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
-          }, 2000);
-        }
-      }
-
-      nextStep();
-    }
-
-    // 入力欄を偽装してタイプライター風に入力
+    // 入力欄タイプライター風
     function fakeTyping(text, callback) {
+      const container = document.createElement("div");
+      container.className = "center";
+      document.body.appendChild(container);
+
       const input = document.createElement("input");
       input.type = "text";
       input.value = "";
-      input.style.padding = "10px";
-      input.style.width = "250px";
-      input.style.fontSize = "1em";
-      input.style.border = "2px solid #0f0";
-      input.style.borderRadius = "8px";
-      input.style.background = "#111";
-      input.style.color = "#0f0";
-      document.body.appendChild(input);
+      container.appendChild(input);
 
       let i = 0;
       const interval = setInterval(() => {
@@ -189,31 +138,37 @@
         i++;
         if (i >= text.length) {
           clearInterval(interval);
-          callback();
+          callback(container, text);
         }
       }, 150);
     }
 
-    // Enterキーを押した風の演出
-    function fakeEnter(callback) {
-      const enterBtn = document.createElement("div");
-      enterBtn.textContent = "Enterキー";
-      enterBtn.style.margin = "20px auto";
-      enterBtn.style.padding = "10px 20px";
-      enterBtn.style.width = "fit-content";
-      enterBtn.style.border = "2px solid #0f0";
-      enterBtn.style.borderRadius = "8px";
-      enterBtn.style.color = "#0f0";
-      enterBtn.style.fontSize = "1.2em";
-      document.body.appendChild(enterBtn);
+    // Enterキー落下＆押される演出
+    function fakeEnter(container, query, callback) {
+      const enterKey = document.createElement("div");
+      enterKey.textContent = "Enter";
+      enterKey.className = "key drop";
+      container.appendChild(enterKey);
 
+      // 落下後に光って押される
       setTimeout(() => {
-        enterBtn.classList.add("highlight");
+        enterKey.classList.add("pressed");
         setTimeout(() => {
-          callback();
-        }, 1000);
+          callback(query);
+        }, 1200);
       }, 1000);
     }
+
+    // 実際の検索へ飛ばす
+    function redirectToGoogle(query) {
+      const url = "https://www.google.com/search?q=" + encodeURIComponent(query);
+      window.location.href = url;
+    }
+
+    // 実行開始
+    fakeTyping("調べ方", (container, text) => {
+      fakeEnter(container, text, redirectToGoogle);
+    });
   </script>
 </body>
 </html>
