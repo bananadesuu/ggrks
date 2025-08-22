@@ -35,9 +35,6 @@
       background: #111;
       color: #0f0;
     }
-    input[type="text"]::placeholder {
-      color: #555;
-    }
     button {
       padding: 10px 20px;
       font-size: 1em;
@@ -69,6 +66,10 @@
       z-index: 2;
       color: lime;
     }
+    .highlight {
+      border: 2px solid yellow;
+      box-shadow: 0 0 10px yellow;
+    }
   </style>
 </head>
 <body>
@@ -80,14 +81,13 @@
   </form>
 
   <script>
-    // ===== 煽りワード雨 =====
+    // ===== 背景（煽りワード雨） =====
     const canvas = document.getElementById("matrix");
     const ctx = canvas.getContext("2d");
-
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
 
-    const insults = ["バーカ", "アホ", "マヌケ", "ドジ", "雑魚", "情弱", "カス", "草", "ググれ", "しらべろｗ"];
+    const insults = ["バーカ", "アホ", "マヌケ", "雑魚", "情弱", "カス", "草", "しらべろｗ"];
     const fontSize = 20;
     const columns = Math.floor(canvas.width / fontSize);
     const drops = Array(columns).fill(1);
@@ -95,7 +95,6 @@
     function draw() {
       ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
       ctx.fillStyle = "#0f0";
       ctx.font = fontSize + "px monospace";
 
@@ -111,52 +110,109 @@
     }
     setInterval(draw, 80);
 
-    // ===== フォーム送信処理 =====
+    // ===== ステップ演出付き検索 =====
     document.getElementById("searchForm").addEventListener("submit", function(e) {
       e.preventDefault();
-      const q = document.getElementById("query").value;
+      const q = document.getElementById("query").value.trim();
       if (q) {
-        showStepsAndRedirect(q);
+        showSteps(q);
       }
     });
 
-    // ===== URLに ?q= があれば即ステップ表示 =====
     const params = new URLSearchParams(window.location.search);
     const q = params.get("q");
     if (q) {
-      showStepsAndRedirect(q);
+      showSteps(q);
     }
 
-    // ===== 調べ方をタイプライター風に表示する関数 =====
-    function showStepsAndRedirect(query) {
-      const steps = [
-        "① ブラウザを開く（できる？ｗ）",
-        "② Googleを開く（知ってるかな？ｗ）",
-        "③ 調べたい言葉を入力する（ココ大事！）",
-        "④ Enterを押す（それぐらい分かるよね？ｗ）",
-        "…ほら、簡単だろ？情弱でもできるぞｗ"
-      ];
-      let i = 0;
+    function showSteps(query) {
       document.body.innerHTML = "<canvas id='matrix'></canvas><pre id='steps'></pre>";
       const pre = document.getElementById("steps");
 
-      // 背景の雨を再描画するために再設定
+      // 背景を復活
       const canvas = document.getElementById("matrix");
       const ctx = canvas.getContext("2d");
       canvas.height = window.innerHeight;
       canvas.width = window.innerWidth;
       setInterval(draw, 80);
 
-      const interval = setInterval(() => {
-        pre.textContent += steps[i] + "\n";
-        i++;
-        if (i >= steps.length) {
-          clearInterval(interval);
+      const steps = [
+        { text: "① 調べたい言葉を入力する（できる？ｗ）", action: "type" },
+        { text: "② Enterを押す（それぐらい分かるよね？ｗ）", action: "enter" },
+        { text: "…ほら、情弱でもできるぞｗ", action: "redirect" }
+      ];
+
+      let i = 0;
+
+      function nextStep() {
+        if (i >= steps.length) return;
+        const step = steps[i];
+        pre.textContent += step.text + "\n\n";
+
+        if (step.action === "type") {
+          fakeTyping(query, () => {
+            i++;
+            setTimeout(nextStep, 1500);
+          });
+        } else if (step.action === "enter") {
+          fakeEnter(() => {
+            i++;
+            setTimeout(nextStep, 1500);
+          });
+        } else if (step.action === "redirect") {
           setTimeout(() => {
             window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
           }, 2000);
         }
-      }, 1500);
+      }
+
+      nextStep();
+    }
+
+    // 入力欄を偽装してタイプライター風に入力
+    function fakeTyping(text, callback) {
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = "";
+      input.style.padding = "10px";
+      input.style.width = "250px";
+      input.style.fontSize = "1em";
+      input.style.border = "2px solid #0f0";
+      input.style.borderRadius = "8px";
+      input.style.background = "#111";
+      input.style.color = "#0f0";
+      document.body.appendChild(input);
+
+      let i = 0;
+      const interval = setInterval(() => {
+        input.value += text[i];
+        i++;
+        if (i >= text.length) {
+          clearInterval(interval);
+          callback();
+        }
+      }, 150);
+    }
+
+    // Enterキーを押した風の演出
+    function fakeEnter(callback) {
+      const enterBtn = document.createElement("div");
+      enterBtn.textContent = "Enterキー";
+      enterBtn.style.margin = "20px auto";
+      enterBtn.style.padding = "10px 20px";
+      enterBtn.style.width = "fit-content";
+      enterBtn.style.border = "2px solid #0f0";
+      enterBtn.style.borderRadius = "8px";
+      enterBtn.style.color = "#0f0";
+      enterBtn.style.fontSize = "1.2em";
+      document.body.appendChild(enterBtn);
+
+      setTimeout(() => {
+        enterBtn.classList.add("highlight");
+        setTimeout(() => {
+          callback();
+        }, 1000);
+      }, 1000);
     }
   </script>
 </body>
