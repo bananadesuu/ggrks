@@ -5,19 +5,26 @@
   <title>ググれ！</title>
   <style>
     body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+      color: #0f0;
       font-family: monospace;
       text-align: center;
-      margin-top: 100px;
-      background: #000; /* 黒背景 */
-      color: #0f0;      /* 緑文字で怪しさUP */
     }
     h1 {
       font-size: 3em;
-      margin-bottom: 20px;
-      animation: blink 1s infinite; /* 点滅 */
+      margin-top: 80px;
+      position: relative;
+      z-index: 1;
+      animation: blink 1s infinite;
     }
     @keyframes blink {
       50% { color: red; }
+    }
+    form {
+      position: relative;
+      z-index: 1;
     }
     input[type="text"] {
       padding: 10px;
@@ -44,9 +51,18 @@
     button:hover {
       background: darkred;
     }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
   </style>
 </head>
 <body>
+  <canvas id="matrix"></canvas>
   <h1>ググれ！</h1>
   <form id="searchForm">
     <input type="text" id="query" placeholder="ここに入力">
@@ -54,16 +70,46 @@
   </form>
 
   <script>
-    // フォーム送信時の処理
+    // マトリックス背景
+    const canvas = document.getElementById("matrix");
+    const ctx = canvas.getContext("2d");
+
+    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+
+    const letters = "アイウエオカキクケコサシスセソタチツテト0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function draw() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#0f0";
+      ctx.font = fontSize + "px monospace";
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = letters.charAt(Math.floor(Math.random() * letters.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+    setInterval(draw, 50);
+
+    // フォーム送信処理
     document.getElementById("searchForm").addEventListener("submit", function(e) {
-      e.preventDefault(); // ページリロード防止
+      e.preventDefault();
       const q = document.getElementById("query").value;
       if (q) {
-        // 一瞬だけメッセージを出してからリダイレクト
-        document.body.innerHTML = "<h1>自分で調べろ！</h1>";
+        document.body.innerHTML = "<h1 style='color:red;'>自分で調べろ！</h1>";
         setTimeout(() => {
           window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(q);
-        }, 2000); // 2秒後に検索へ
+        }, 2000);
       }
     });
 
@@ -71,7 +117,7 @@
     const params = new URLSearchParams(window.location.search);
     const q = params.get("q");
     if (q) {
-      document.body.innerHTML = "<h1>自分で調べろ！</h1>";
+      document.body.innerHTML = "<h1 style='color:red;'>自分で調べろ！</h1>";
       setTimeout(() => {
         window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(q);
       }, 2000);
