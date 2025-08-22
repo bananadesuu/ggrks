@@ -3,20 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <title>ググれ！</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 100px;
+      background: #f8f9fa;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+    input[type="text"] {
+      padding: 10px;
+      width: 250px;
+      font-size: 1em;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      margin-left: 10px;
+      background: #0078d7;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005a9e;
+    }
+  </style>
 </head>
 <body>
-<script>
-  // URLパラメータ ?q=検索ワード を取得
-  const params = new URLSearchParams(window.location.search);
-  const q = params.get("q");
+  <h1>ググれ！</h1>
+  <form id="searchForm">
+    <input type="text" id="query" placeholder="ここに入力">
+    <button type="submit">検索</button>
+  </form>
 
-  if (q) {
-    // Google検索にリダイレクト
-    window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(q);
-  } else {
-    // qが無いときの表示
-    document.write("<h1>検索ワードを指定してね！ 例: ?q=ラーメン 東京</h1>");
-  }
-</script>
+  <script>
+    // フォーム送信時の処理
+    document.getElementById("searchForm").addEventListener("submit", function(e) {
+      e.preventDefault(); // ページリロード防止
+      const q = document.getElementById("query").value;
+      if (q) {
+        window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(q);
+      }
+    });
+
+    // URLに ?q= があれば即リダイレクト
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get("q");
+    if (q) {
+      window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(q);
+    }
+  </script>
 </body>
 </html>
