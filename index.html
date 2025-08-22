@@ -70,17 +70,18 @@
   </form>
 
   <script>
-    // マトリックス背景
+    // ===== 煽りワード雨 =====
     const canvas = document.getElementById("matrix");
     const ctx = canvas.getContext("2d");
 
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
 
-    const letters = "アイウエオカキクケコサシスセソタチツテト0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const fontSize = 14;
-    const columns = canvas.width / fontSize;
-    const drops = Array(Math.floor(columns)).fill(1);
+    // 煽りワードのリスト
+    const insults = ["バーカ", "アホ", "マヌケ", "ドジ", "雑魚", "情弱", "カス", "草", "ググれ", "しらべろｗ"];
+    const fontSize = 20;
+    const columns = Math.floor(canvas.width / fontSize);
+    const drops = Array(columns).fill(1);
 
     function draw() {
       ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
@@ -90,7 +91,7 @@
       ctx.font = fontSize + "px monospace";
 
       for (let i = 0; i < drops.length; i++) {
-        const text = letters.charAt(Math.floor(Math.random() * letters.length));
+        const text = insults[Math.floor(Math.random() * insults.length)];
         ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 
         if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
@@ -99,9 +100,9 @@
         drops[i]++;
       }
     }
-    setInterval(draw, 50);
+    setInterval(draw, 80);
 
-    // フォーム送信処理
+    // ===== フォーム送信処理 =====
     document.getElementById("searchForm").addEventListener("submit", function(e) {
       e.preventDefault();
       const q = document.getElementById("query").value;
@@ -113,7 +114,7 @@
       }
     });
 
-    // URLに ?q= があれば即リダイレクト
+    // ===== URLに ?q= があれば即リダイレクト =====
     const params = new URLSearchParams(window.location.search);
     const q = params.get("q");
     if (q) {
