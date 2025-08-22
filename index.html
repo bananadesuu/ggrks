@@ -59,6 +59,16 @@
       height: 100%;
       z-index: 0;
     }
+    pre {
+      text-align: left;
+      margin: 50px auto;
+      width: fit-content;
+      font-size: 1.5em;
+      white-space: pre-wrap;
+      position: relative;
+      z-index: 2;
+      color: lime;
+    }
   </style>
 </head>
 <body>
@@ -77,7 +87,6 @@
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
 
-    // 煽りワードのリスト
     const insults = ["バーカ", "アホ", "マヌケ", "ドジ", "雑魚", "情弱", "カス", "草", "ググれ", "しらべろｗ"];
     const fontSize = 20;
     const columns = Math.floor(canvas.width / fontSize);
@@ -107,21 +116,47 @@
       e.preventDefault();
       const q = document.getElementById("query").value;
       if (q) {
-        document.body.innerHTML = "<h1 style='color:red;'>自分で調べろ！</h1>";
-        setTimeout(() => {
-          window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(q);
-        }, 2000);
+        showStepsAndRedirect(q);
       }
     });
 
-    // ===== URLに ?q= があれば即リダイレクト =====
+    // ===== URLに ?q= があれば即ステップ表示 =====
     const params = new URLSearchParams(window.location.search);
     const q = params.get("q");
     if (q) {
-      document.body.innerHTML = "<h1 style='color:red;'>自分で調べろ！</h1>";
-      setTimeout(() => {
-        window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(q);
-      }, 2000);
+      showStepsAndRedirect(q);
+    }
+
+    // ===== 調べ方をタイプライター風に表示する関数 =====
+    function showStepsAndRedirect(query) {
+      const steps = [
+        "① ブラウザを開く（できる？ｗ）",
+        "② Googleを開く（知ってるかな？ｗ）",
+        "③ 調べたい言葉を入力する（ココ大事！）",
+        "④ Enterを押す（それぐらい分かるよね？ｗ）",
+        "…ほら、簡単だろ？情弱でもできるぞｗ"
+      ];
+      let i = 0;
+      document.body.innerHTML = "<canvas id='matrix'></canvas><pre id='steps'></pre>";
+      const pre = document.getElementById("steps");
+
+      // 背景の雨を再描画するために再設定
+      const canvas = document.getElementById("matrix");
+      const ctx = canvas.getContext("2d");
+      canvas.height = window.innerHeight;
+      canvas.width = window.innerWidth;
+      setInterval(draw, 80);
+
+      const interval = setInterval(() => {
+        pre.textContent += steps[i] + "\n";
+        i++;
+        if (i >= steps.length) {
+          clearInterval(interval);
+          setTimeout(() => {
+            window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
+          }, 2000);
+        }
+      }, 1500);
     }
   </script>
 </body>
